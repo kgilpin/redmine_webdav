@@ -123,7 +123,7 @@ module Railsdav
         end
       when 1
         if (@setting.subversion_only && @setting.subversion_enabled)
-          if @isdir && @container.is_a?(Redmine::Scm::Adapters::Entry)
+          if @isdir && @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
             @project.repository.entries(FileResource.scm_path(@project, @container.path), @project.repository.default_branch).each do |entry|
               resources << self.class.new(@project, File.join("/", @container.path, entry.name), File.join(@href, URI.escape(entry.name)))
             end
@@ -148,7 +148,7 @@ module Railsdav
         end
       when 2
         if @isdir
-          if @container.is_a?(Redmine::Scm::Adapters::Entry)
+          if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
             svnpath = @setting.subversion_only ? "/" : @setting.subversion_label
             @project.repository.entries(FileResource.scm_path(@project, @container.path), @project.repository.default_branch).each do |entry|
               resources << self.class.new(@project, File.join(svnpath, @container.path, entry.name), File.join(@href, URI.escape(entry.name)))
@@ -167,7 +167,7 @@ module Railsdav
           end
         end
       else
-        if @isdir && @container.is_a?(Redmine::Scm::Adapters::Entry)
+        if @isdir && @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
           svnpath = @setting.subversion_only ? "/" : @setting.subversion_label
           @project.repository.entries(FileResource.scm_path(@project, @container.path), @project.repository.default_branch).each do |entry|
             resources << self.class.new(@project, File.join(svnpath, @container.path, entry.name), File.join(@href, URI.escape(entry.name)))
@@ -190,13 +190,13 @@ module Railsdav
       when 0
         @project.name
       when 1
-        if @container.is_a?(Redmine::Scm::Adapters::Entry)
+        if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
           @container.name
         else
           @container
         end
       else
-        if @container.is_a?(Redmine::Scm::Adapters::Entry)
+        if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
           @container.name
         elsif @isdir
           if @container.is_a?(Document)
@@ -212,7 +212,7 @@ module Railsdav
 
     def creationdate
       cdate = @project.created_on
-      if @container.is_a?(Redmine::Scm::Adapters::Entry)
+      if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
         cdate = @container.lastrev.time
       elsif @level > 1
         if @isdir
@@ -226,7 +226,7 @@ module Railsdav
 
     def getlastmodified
       cdate = @project.updated_on
-      if @container.is_a?(Redmine::Scm::Adapters::Entry)
+      if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
         cdate = @container.lastrev.time
       elsif @level > 1
         if @isdir
@@ -245,13 +245,13 @@ module Railsdav
       when 0
         sprintf('%x-%x-%x', @project.id, 0, @project.updated_on.to_i)
       when 1
-        if @container.is_a?(Redmine::Scm::Adapters::Entry)
+        if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
           sprintf('%x-%x-%x', @container.size, 0, @container.lastrev.time.to_i)
         else
           sprintf('%x-%x-%x', (@project.id * 10) + @container.length, 0, @project.updated_on.to_i)
         end
       else
-        if @container.is_a?(Redmine::Scm::Adapters::Entry)
+        if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
           sprintf('%x-%x-%x', @container.size, 0, @container.lastrev.time.to_i)
         elsif @isdir
           if @container.is_a?(Version)
@@ -280,7 +280,7 @@ module Railsdav
 
     def data
       if ! @isdir
-        if @container.is_a?(Redmine::Scm::Adapters::Entry)
+        if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
           @project.repository.cat(FileResource.scm_path(@project, @container.path), @project.repository.default_branch)
         else
           File.new(@file.diskfile)
@@ -296,7 +296,7 @@ module Railsdav
 
     def delete!
       self.class.do_file_action do
-        if @container.is_a?(Redmine::Scm::Adapters::Entry)
+        if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
           if @project.repository.scm.respond_to?('webdav_delete')
             @project.repository.scm.webdav_delete(@project, FileResource.scm_path(@project, @container.path), "deleted #{File.basename(@container.path)}", nil)
           end
@@ -383,7 +383,7 @@ module Railsdav
     end
 
     def move_to_path(dest_path, depth)
-      if @container.is_a?(Redmine::Scm::Adapters::Entry)
+      if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
         svnpath = @setting.subversion_only ? "" : @setting.subversion_label
         if @project.repository.scm.respond_to?('webdav_move')
           @project.repository.scm.webdav_move(@project, FileResource.scm_path(@project, @container.path), FileResource.scm_path(@project, dest_path[(svnpath.length)..-1]), "moved/renamed #{File.basename(dest_path)}", nil)
@@ -404,7 +404,7 @@ module Railsdav
     end
 
     def copy_to_path(dest_path, depth)
-      if @container.is_a?(Redmine::Scm::Adapters::Entry)
+      if @container.is_a?(Redmine::Scm::Adapters::AbstractAdapter)
         svnpath = @setting.subversion_only ? "" : @setting.subversion_label
         if @project.repository.scm.respond_to?('webdav_copy')
           @project.repository.scm.webdav_copy(@project, FileResource.scm_path(@project, @container.path), FileResource.scm_path(@project, dest_path[(svnpath.length)..-1]), "copied #{File.basename(dest_path)}", nil)
